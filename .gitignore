@@ -1,0 +1,10 @@
+# Local secrets / machine config — never commit
+.env
+.env.local
+.env.*.local
+
+# Terraform local state / vars (also listed under terraform/)
+terraform/terraform.tfvars
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*

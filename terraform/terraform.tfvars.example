@@ -1,0 +1,29 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+# Never commit passwords or personal emails to a public repo.
+
+globalaccount_subdomain = "YOURGLOBALIDtrial-ga"   # Cockpit CLI Setup / Terraform Setup (often …trial-ga)
+region                  = "us10"                # match your trial region
+
+# Stuck subaccount GUID:
+#   Cockpit → Account Explorer → open the subaccount where IS subscribe fails → Overview → Subaccount ID
+#   Or: terraform plan → read output "available_subaccounts"
+source_subaccount_id = "00000000-0000-0000-0000-000000000000"
+
+# Prompted via scripts/configure.sh (or set here). Terraform itself does not interactive-prompt.
+recovery_subaccount_name      = "is-recovery"
+recovery_subaccount_subdomain = "is-recovery-unique-123"  # must be globally unique
+
+cf_org_name      = "is-recovery-org"
+cf_space_name    = "DEV"   # created after apply with scripts/create_cf_space.sh
+admin_user_email = "you@example.com"
+
+free_source_entitlements                     = true
+delete_source_integration_suite_subscription = true   # run scripts/delete_source_integration_suite.sh before apply
+create_integration_suite_subscription        = true
+
+# Entitlement service_name ≠ subscription app_name on many trials.
+# Discover: btp list accounts/entitlement|subscription --subaccount <guid>
+integration_suite_entitlement_service_name = "integrationsuite-trial"
+integration_suite_subscription_app_name    = "it-cpitrial06-prov"
+integration_suite_plan_name                = "trial"
+cf_runtime_amount                          = 4
