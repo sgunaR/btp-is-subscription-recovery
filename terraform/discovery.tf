@@ -1,25 +1,30 @@
 ############################################################
-# Discovery — list Global Account subaccounts
-# Auth: btp login --url https://cli.btp.cloud.sap --sso --subdomain "<GA-subdomain>"
-#    then: USE_BTPCLI_SESSION=true
-#    or: BTP_USERNAME + BTP_PASSWORD  (cf login is not reused)
-# Then:  terraform init && terraform plan
-# Outputs show every subaccount id/name/subdomain so you can
-# pick the stuck one for source_subaccount_id (no auto-guess:
-# "decommissioning" is not a reliable filter in the API).
+# Optional discovery — list Global Account subaccounts
+# Off by default: some landscapes return 404 on this API and
+# that would block terraform plan/apply. Enable when needed:
+#   enable_subaccount_discovery = true
+# Or: btp list accounts/subaccount
 ############################################################
 
-data "btp_subaccounts" "all" {}
+variable "enable_subaccount_discovery" {
+  type        = bool
+  description = "If true, query all subaccounts (can 404 on some trials and fail plan)"
+  default     = false
+}
+
+data "btp_subaccounts" "all" {
+  count = var.enable_subaccount_discovery ? 1 : 0
+}
 
 output "available_subaccounts" {
-  description = "All subaccounts in the Global Account — use the stuck one's id as source_subaccount_id"
-  value = [
-    for s in data.btp_subaccounts.all.values : {
+  description = "All subaccounts when enable_subaccount_discovery=true — else empty"
+  value = var.enable_subaccount_discovery ? [
+    for s in data.btp_subaccounts.all[0].values : {
       id        = s.id
       name      = s.name
       subdomain = s.subdomain
       region    = s.region
       state     = s.state
     }
-  ]
+  ] : []
 }

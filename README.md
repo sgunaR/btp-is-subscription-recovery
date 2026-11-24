@@ -22,14 +22,6 @@ This repo automates that with **Terraform** ([`SAP/btp`](https://registry.terraf
 
 Your Global Account subdomain, stuck Subaccount GUID, and recovery names are **different for every person / landscape**. Nothing landscape-specific is hard-coded in the repo. Each user keeps their values in a local **`.env`** (gitignored).
 
-### Walkthrough video
-
-Short Recordly walkthrough (replace with your public link when published):
-
-```text
-https://<your-recordly-or-video-url>
-```
-
 ## Install dependencies
 
 | Tool | Why |
@@ -115,18 +107,25 @@ terraform version
 
 ### Quick path (after tools are installed)
 
+Use **bash** for these commands (`bash` if your default shell is fish). Helper scripts load `.env` themselves.
+
 ```bash
-cp .env.example .env          # once — put YOUR Cockpit values in .env
+cp .env.example .env          # once — put YOUR Cockpit values in .env (see Step 3)
 ./scripts/configure.sh --from-env
 ./scripts/btp_login.sh        # browser SSO; do not paste other commands into prompts
-source ./scripts/load_env.sh
+export USE_BTPCLI_SESSION=true
 ./scripts/delete_source_integration_suite.sh
-./scripts/free_source_entitlements.sh   # IS + CF MEMORY → 0 on source (btp CLI)
+./scripts/free_source_entitlements.sh   # IS + CF MEMORY → 0 on source (btp CLI; Terraform cannot amount=0)
 cd terraform && terraform init && terraform plan && terraform apply
 cd .. && ./scripts/create_cf_space.sh   # after CF is enabled on the NEW subaccount
 ```
 
-You do **not** re-edit `.env` every day. Re-run `./scripts/btp_login.sh` when the BTP CLI session expires. Edit `.env` only when the account or stuck subaccount changes.
+Notes:
+
+- Copy Global Account subdomain from Cockpit **CLI Setup** (often `…trial-ga`, not `…trialtrial-ga`).  
+- Subscription app name is often `it-cpitrial06-prov`; entitlement service is often `integrationsuite-trial`.  
+- You do **not** re-edit `.env` every day. Re-run `./scripts/btp_login.sh` when the session expires.  
+- In **fish**: do not `source ./scripts/load_env.sh` — use `set -x USE_BTPCLI_SESSION true` or switch to `bash`.
 
 ---
 
@@ -160,19 +159,23 @@ The repo ships placeholders only:
 cp .env.example .env   # only once on a fresh clone — do not re-run if .env already filled
 ```
 
-Edit `.env` with **your** values, for example:
+Edit `.env` with **your** values (full template: [`.env.example`](.env.example)):
 
 ```bash
-GLOBALACCOUNT_SUBDOMAIN=<your-id>trial-ga
-SOURCE_SUBACCOUNT_ID=<your-stuck-subaccount-guid>
+GLOBALACCOUNT_SUBDOMAIN=<your-id>trial-ga          # Cockpit CLI Setup — not CF org alone
+SOURCE_SUBACCOUNT_ID=<stuck-subaccount-guid>
 RECOVERY_SUBACCOUNT_NAME=is-recovery
-RECOVERY_SUBACCOUNT_SUBDOMAIN=<globally-unique-name>
+RECOVERY_SUBACCOUNT_SUBDOMAIN=<globally-unique-name>  # never reuse a CREATION_FAILED name
 ADMIN_USER_EMAIL=you@example.com
 REGION=us10
+INTEGRATION_SUITE_ENTITLEMENT_SERVICE_NAME=integrationsuite-trial
+INTEGRATION_SUITE_SUBSCRIPTION_APP_NAME=it-cpitrial06-prov   # confirm via btp list
+INTEGRATION_SUITE_PLAN_NAME=trial
+CF_ENVIRONMENT_PLAN_NAME=trial
 USE_BTPCLI_SESSION=true
 ```
 
-See [`.env.example`](.env.example) for the full list. Do not copy another person’s subdomain or GUID.
+Do not copy another person’s subdomain or GUID.
 
 Write Terraform vars (no prompts):
 
@@ -192,7 +195,7 @@ Or interactive (uses `.env` + CF as defaults):
 
 ```bash
 ./scripts/btp_login.sh
-source ./scripts/load_env.sh
+export USE_BTPCLI_SESSION=true
 ```
 
 `btp_login.sh` runs the same shape as Cockpit **CLI Setup**:
@@ -202,10 +205,10 @@ btp login --url https://cli.btp.cloud.sap --sso --subdomain "<YOUR-globalaccount
 ```
 
 - Always use **`--sso`** (otherwise the CLI asks for User/Password).  
-- Press Enter / finish the **browser** flow — do **not** paste `export …` into prompts.  
-- `source ./scripts/load_env.sh` exports `USE_BTPCLI_SESSION=true` from `.env`.
+- Finish the **browser** flow — do **not** paste other commands into prompts.  
+- Keep `USE_BTPCLI_SESSION=true` in the same shell (scripts also read `.env`).
 
-Password fallback: set `BTP_USERNAME` / `BTP_PASSWORD` in `.env`, set `USE_BTPCLI_SESSION=false`, then `source ./scripts/load_env.sh`.
+Password fallback: set `BTP_USERNAME` / `BTP_PASSWORD` in `.env` and `USE_BTPCLI_SESSION=false`.
 
 ### Step 5 — Delete unfinished Integration Suite on the source
 
@@ -241,9 +244,11 @@ That runs `btp assign accounts/entitlement … --amount 0` for Integration Suite
 ```bash
 cd terraform
 terraform init
-terraform plan    # also prints available_subaccounts (dynamic list for your GA)
+terraform plan
 terraform apply
 ```
+
+Optional: list subaccounts via Terraform with `enable_subaccount_discovery = true` in `terraform.tfvars` (can 404 on some trials). Prefer `btp list accounts/subaccount` instead.
 
 Default apply order (after source quota is freed):
 
@@ -277,7 +282,7 @@ Cockpit may show a red **Creation Failed** card (e.g. `trial2`). That subaccount
 
 ```bash
 ./scripts/btp_login.sh
-source ./scripts/load_env.sh
+export USE_BTPCLI_SESSION=true
 ./scripts/cleanup_failed_recovery.sh
 ```
 
