@@ -22,6 +22,10 @@ This repo automates that with **Terraform** ([`SAP/btp`](https://registry.terraf
 
 Your Global Account subdomain, stuck Subaccount GUID, and recovery names are **different for every person / landscape**. Nothing landscape-specific is hard-coded in the repo. Each user keeps their values in a local **`.env`** (gitignored).
 
+### Walkthrough video
+
+Short end-to-end demo: [https://youtu.be/UKR-oc8NEQ0](https://youtu.be/UKR-oc8NEQ0)
+
 ## Install dependencies
 
 | Tool | Why |
