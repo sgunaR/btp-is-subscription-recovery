@@ -24,7 +24,9 @@ Your Global Account subdomain, stuck Subaccount GUID, and recovery names are **d
 
 ### Walkthrough video
 
-Short end-to-end demo: [https://youtu.be/UKR-oc8NEQ0](https://youtu.be/UKR-oc8NEQ0)
+[![Watch the walkthrough — BTP Integration Suite recovery](docs/images/youtube-thumbnail.jpg)](https://www.youtube.com/watch?v=UKR-oc8NEQ0)
+
+Click the preview to open the short end-to-end demo on [YouTube](https://www.youtube.com/watch?v=UKR-oc8NEQ0).
 
 ## Install dependencies
 
